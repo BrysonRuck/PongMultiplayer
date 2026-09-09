@@ -12,9 +12,10 @@ GameObject:
   - component: {fileID: 3801271090023591906}
   - component: {fileID: 2602322345129069946}
   - component: {fileID: 3321126122244392643}
-  - component: {fileID: 8936796061542835020}
   - component: {fileID: 8328467019427370685}
+  - component: {fileID: 8936796061542835020}
   - component: {fileID: 7097781934957100569}
+  - component: {fileID: -4151607385075530238}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -115,25 +116,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &8936796061542835020
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1462054353085319320}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8e88dbd3ab2cb36419b0aea5ef31ca7a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  side: 0
-  minTravelZ: -3
-  maxTravelZ: 3
-  speed: 3
-  collisionBallSpeedUp: 1.5
-  moveUpKey: 37
-  moveDownKey: 33
 --- !u!114 &8328467019427370685
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -160,6 +142,26 @@ MonoBehaviour:
   AutoObjectParentSync: 1
   SyncOwnerTransformWhenParented: 1
   AllowOwnerToParent: 0
+--- !u!114 &8936796061542835020
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1462054353085319320}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8e88dbd3ab2cb36419b0aea5ef31ca7a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
+  side: 0
+  minTravelZ: -3
+  maxTravelZ: 3
+  speed: 3
+  collisionBallSpeedUp: 1.5
+  moveUpKey: 37
+  moveDownKey: 33
 --- !u!114 &7097781934957100569
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -189,7 +191,7 @@ MonoBehaviour:
   UseUnreliableDeltas: 0
   SyncPositionX: 1
   SyncPositionY: 1
-  SyncPositionZ: 0
+  SyncPositionZ: 1
   SyncRotAngleX: 0
   SyncRotAngleY: 0
   SyncRotAngleZ: 0
@@ -206,3 +208,19 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!114 &-4151607385075530238
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1462054353085319320}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ab7e3261158634a95b68f5ec561507d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerNetwork
+  ShowTopMostFoldoutHeaderGroup: 1
+  paddle: {fileID: 8936796061542835020}
+  moveUpKey: 37
+  moveDownKey: 33

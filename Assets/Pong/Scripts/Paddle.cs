@@ -1,3 +1,4 @@
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -18,7 +19,7 @@ using UnityEngine.InputSystem;
  * prefab X if the table is centered at 0.
  */
 
-public class Paddle : MonoBehaviour
+public class Paddle : NetworkBehaviour
 {
     [SerializeField] PaddleSide side;
     [SerializeField] float minTravelZ;
@@ -40,53 +41,65 @@ public class Paddle : MonoBehaviour
         ApplySidePosition();
     }
 
+    public void Move(float direction)
+    {
+        Vector3 newPosition = transform.position +
+            new Vector3(0f, 0f, direction) * speed * Time.deltaTime;
+
+        newPosition.z = Mathf.Clamp(
+            newPosition.z,
+            minTravelZ,
+            maxTravelZ
+        );
+
+        transform.position = newPosition;
+    }
+
+    public void SetSide(PaddleSide newSide)
+    {
+        side = newSide;
+        ApplySidePosition();
+    }
+
     void ApplySidePosition()
     {
         float x = side == PaddleSide.Left ? LeftX : RightX;
+
         Vector3 paddlePos = transform.position;
         paddlePos.x = x;
         transform.position = paddlePos;
     }
 
-    void Update()
-    {
-        float direction = 0f;
-        if (Keyboard.current[moveUpKey].isPressed) direction += 1f;
-        if (Keyboard.current[moveDownKey].isPressed) direction -= 1f;
-
-        Vector3 newPosition = transform.position + new Vector3(0f, 0f, direction) * speed * Time.deltaTime;
-        newPosition.z = Mathf.Clamp(newPosition.z, minTravelZ, maxTravelZ);
-
-        transform.position = newPosition;
-    }
-
     void OnCollisionEnter(Collision other)
     {
-        // Get world-space bounds
         var paddleBounds = GetComponent<BoxCollider>().bounds;
 
         float paddleCenterZ = paddleBounds.center.z;
         float paddleHalfHeight = paddleBounds.extents.z;
         float hitZ = other.GetContact(0).point.z;
 
-        // Get a parameterized value roughly in the -1 to 1 range for where the ball hits
-        float normalizedHit = (hitZ - paddleCenterZ) / paddleHalfHeight;
+        float normalizedHit =
+            (hitZ - paddleCenterZ) / paddleHalfHeight;
 
-        // Cap it so that it stay within range (happens when hitting the corner of the paddle)
-        float bounceDirection = Mathf.Clamp(normalizedHit, -1f, 1f);
+        float bounceDirection =
+            Mathf.Clamp(normalizedHit, -1f, 1f);
 
-        // Ideally we would use linearVelocity here.  Unfortunately, it is 0-length during the collision
         Vector3 currentVelocity = other.relativeVelocity;
 
-        // The flipped sign will change the velocity direction appropriately for both paddles
         float newSign = -Mathf.Sign(currentVelocity.x);
 
-        // Change the velocity between -60 to 60 degrees based on where it hit the paddle
-        float newSpeed = currentVelocity.magnitude * collisionBallSpeedUp;
-        float newAngle = 60f * bounceDirection * Mathf.Deg2Rad;
+        float newSpeed =
+            currentVelocity.magnitude * collisionBallSpeedUp;
 
-        // Calculate new velocity vector - using trig and scaled by new speed
-        Vector3 newVelocity = new Vector3(newSign * Mathf.Cos(newAngle), 0f, Mathf.Sin(newAngle)) * newSpeed;
+        float newAngle =
+            60f * bounceDirection * Mathf.Deg2Rad;
+
+        Vector3 newVelocity = new Vector3(
+            newSign * Mathf.Cos(newAngle),
+            0f,
+            Mathf.Sin(newAngle)
+        ) * newSpeed;
+
         other.rigidbody.linearVelocity = newVelocity;
     }
 }

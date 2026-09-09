@@ -1,4 +1,5 @@
 using TMPro;
+using Unity.Netcode;
 using UnityEngine;
 
 /*
@@ -8,7 +9,7 @@ using UnityEngine;
  * score is synchronized to every client.
  */
 
-public class GameManager : MonoBehaviour
+public class GameManager : NetworkBehaviour
 {
     [SerializeField] Transform ball;
     [SerializeField] float startSpeed = 3f;
@@ -16,65 +17,141 @@ public class GameManager : MonoBehaviour
     [SerializeField] TextMeshProUGUI leftPlayerScoreText;
     [SerializeField] TextMeshProUGUI rightPlayerScoreText;
 
-    int _leftPlayerScore;
-    int _rightPlayerScore;
+    NetworkVariable<int> _leftPlayerScore = new NetworkVariable<int>();
+    NetworkVariable<int> _rightPlayerScore = new NetworkVariable<int>();
 
     const int ScoreToWin = 11;
 
-    void Start()
+    bool gameStarted = false;
+
+    public override void OnNetworkSpawn()
     {
-        UpdateScore();
-        StartGame();
+        _leftPlayerScore.OnValueChanged += OnLeftScoreChanged;
+        _rightPlayerScore.OnValueChanged += OnRightScoreChanged;
+
+        if (!IsServer)
+            return;
+
+        NetworkManager.OnClientConnectedCallback += OnClientConnected;
+        CheckPlayersReady();
+    }
+    void OnLeftScoreChanged(int oldScore, int newScore)
+    {
+        leftPlayerScoreText.text = newScore.ToString();
+    }
+
+    void OnRightScoreChanged(int oldScore, int newScore)
+    {
+        rightPlayerScoreText.text = newScore.ToString();
+    }
+    public override void OnNetworkDespawn()
+    {
+        _leftPlayerScore.OnValueChanged -= OnLeftScoreChanged;
+        _rightPlayerScore.OnValueChanged -= OnRightScoreChanged;
+
+        if (NetworkManager != null)
+            NetworkManager.OnClientConnectedCallback -= OnClientConnected;
+    }
+
+    void OnClientConnected(ulong clientId)
+    {
+        Debug.Log($"Client connected: {clientId}");
+
+        CheckPlayersReady();
+    }
+
+    void CheckPlayersReady()
+    {
+        if (gameStarted)
+            return;
+
+        int playerCount = NetworkManager.ConnectedClients.Count;
+
+        Debug.Log($"Players connected: {playerCount}");
+
+        if (playerCount >= 2)
+        {
+            gameStarted = true;
+
+            Debug.Log("Both players connected! Starting game.");
+
+            UpdateScore();
+            StartGame();
+        }
     }
 
     public void StartGame()
     {
+        if (!IsServer)
+            return;
+
         float direction = Random.value < 0.5f ? -1f : 1f;
         ResetBall(direction);
     }
 
     public void OnGoalScored(PaddleSide scoringSide)
     {
-        // If the ball entered a goal area, increment the score, check for win, and reset the ball
-
+       
+        if (!IsServer)
+            return;
         if (scoringSide == PaddleSide.Left)
         {
-            _leftPlayerScore++;
-            Debug.Log($"Left player scored: {_leftPlayerScore}");
+            _leftPlayerScore.Value++;
+            Debug.Log($"Left player scored: {_leftPlayerScore.Value}");
 
-            if (_leftPlayerScore == ScoreToWin)
+            if (_leftPlayerScore.Value == ScoreToWin)
+            {
                 Debug.Log("Left player wins!");
+            }
             else
+            {
                 ResetBall(1f);
+            }
         }
         else if (scoringSide == PaddleSide.Right)
         {
-            _rightPlayerScore++;
-            Debug.Log($"Right player scored: {_rightPlayerScore}");
+            _rightPlayerScore.Value++;
+            Debug.Log($"Right player scored: {_rightPlayerScore.Value}");
 
-            if (_rightPlayerScore == ScoreToWin)
+            if (_rightPlayerScore.Value == ScoreToWin)
+            {
                 Debug.Log("Right player wins!");
+            }
             else
+            {
                 ResetBall(-1f);
+            }
         }
 
         UpdateScore();
     }
 
+
     void UpdateScore()
     {
-        rightPlayerScoreText.text = _rightPlayerScore.ToString();
-        leftPlayerScoreText.text = _leftPlayerScore.ToString();
+        rightPlayerScoreText.text = _rightPlayerScore.Value.ToString();
+        leftPlayerScoreText.text = _leftPlayerScore.Value.ToString();
     }
 
     void ResetBall(float directionSign)
     {
-        // Start the ball within 20 degrees off-center toward direction indicated by directionSign
+        if (!IsServer)
+            return;
+
         directionSign = Mathf.Sign(directionSign);
-        Vector3 newVelocity = new Vector3(directionSign, 0f, 0f) * startSpeed;
-        newVelocity = Quaternion.Euler(0f, Random.Range(-20f, 20f), 0f) * newVelocity;
+
+        Vector3 newVelocity =
+            new Vector3(directionSign, 0f, 0f) * startSpeed;
+
+        newVelocity =
+            Quaternion.Euler(
+                0f,
+                Random.Range(-20f, 20f),
+                0f
+            ) * newVelocity;
 
         Rigidbody ballRigidbody = ball.GetComponent<Rigidbody>();
+
         ballRigidbody.position = startPosition;
         ballRigidbody.linearVelocity = newVelocity;
         ballRigidbody.angularVelocity = Vector3.zero;

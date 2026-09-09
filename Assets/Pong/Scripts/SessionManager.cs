@@ -23,10 +23,39 @@ public class SessionManager : MonoBehaviour
 
     void Awake()
     {
-        // Hide Host/Client until you are ready to wire the session.
-        sessionUI.gameObject.SetActive(false);
-        
-        startHostButton.onClick.AddListener(() => Debug.Log("TODO: Start Host"));
-        startClientButton.onClick.AddListener(() => Debug.Log("TODO: Start Client"));
+        sessionUI.gameObject.SetActive(true);
+
+        startHostButton.onClick.AddListener(StartHost);
+        startClientButton.onClick.AddListener(StartClient);
+    }
+
+    void StartHost()
+    {
+        Debug.Log("Starting Host...");
+
+        if (networkManager.StartHost())
+        {
+            Debug.Log("Host started successfully.");
+            sessionUI.gameObject.SetActive(false);
+        }
+        else
+        {
+            Debug.LogError("Failed to start Host.");
+        }
+    }
+
+    void StartClient()
+    {
+        Debug.Log("Starting Client...");
+
+        if (networkManager.StartClient())
+        {
+            Debug.Log("Client started successfully.");
+            sessionUI.gameObject.SetActive(false);
+        }
+        else
+        {
+            Debug.LogError("Failed to start Client.");
+        }
     }
 }
